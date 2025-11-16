@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sentiment-Based Product Recommendation</title>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #111827, #1e293b);
+            --card-bg: #0f172a;
+            --accent: #6366f1;
+            --accent-soft: rgba(99, 102, 241, 0.15);
+            --success: #22c55e;
+            --danger: #ef4444;
+            --text-main: #f9fafb;
+            --text-subtle: #9ca3af;
+            --border-subtle: #1f2937;
+            --input-bg: #020617;
+            --badge-bg: rgba(34, 197, 94, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .page-wrapper {
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .app-card {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(18px);
+            border-radius: 22px;
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            padding: 28px 28px 24px;
+            box-shadow:
+                0 24px 80px rgba(15, 23, 42, 0.9),
+                0 0 0 1px rgba(15, 23, 42, 0.7);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .title-block h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .title-pill {
+            font-size: 0.7rem;
+            padding: 3px 9px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            color: var(--text-subtle);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .subtitle {
+            margin-top: 6px;
+            color: var(--text-subtle);
+            font-size: 0.9rem;
+        }
+
+        .sentiment-chip {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            border: 1px solid rgba(99, 102, 241, 0.5);
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #e5e7eb;
+        }
+
+        .sentiment-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Form card */
+        .form-card {
+            background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.11), transparent 55%),
+                        radial-gradient(circle at bottom right, rgba(129, 140, 248, 0.12), transparent 55%),
+                        var(--card-bg);
+            border-radius: 18px;
+            border: 1px solid rgba(31, 41, 55, 0.9);
+            padding: 20px 18px 18px;
+        }
+
+        .form-card h2 {
+            margin: 0 0 12px;
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .form-description {
+            font-size: 0.85rem;
+            color: var(--text-subtle);
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: #e5e7eb;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px 11px;
+            border-radius: 10px;
+            border: 1px solid rgba(55, 65, 81, 0.9);
+            background: var(--input-bg);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+            background: #020617;
+        }
+
+        .hint {
+            font-size: 0.75rem;
+            color: var(--text-subtle);
+            margin-top: 4px;
+        }
+
+        .btn-primary {
+            margin-top: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 16px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #4f46e5, #22c55e);
+            color: #f9fafb;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow:
+                0 10px 30px rgba(79, 70, 229, 0.5),
+                0 0 0 1px rgba(15, 23, 42, 0.9);
+            transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow:
+                0 14px 36px rgba(79, 70, 229, 0.7),
+                0 0 0 1px rgba(15, 23, 42, 0.9);
+            filter: brightness(1.03);
+        }
+
+        .btn-primary span.icon {
+            font-size: 1rem;
+        }
+
+        .error-message {
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(248, 113, 113, 0.06);
+            border: 1px solid rgba(248, 113, 113, 0.5);
+            color: #fecaca;
+            font-size: 0.82rem;
+        }
+
+        /* Recommendations */
+        .recommendations-card {
+            background: radial-gradient(circle at top right, rgba(52, 211, 153, 0.09), transparent 55%),
+                        radial-gradient(circle at bottom left, rgba(96, 165, 250, 0.10), transparent 55%),
+                        var(--card-bg);
+            border-radius: 18px;
+            border: 1px solid rgba(31, 41, 55, 0.9);
+            padding: 18px 18px 14px;
+            min-height: 180px;
+        }
+
+        .recommendations-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .recommendations-header h2 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .results-meta {
+            font-size: 0.8rem;
+            color: var(--text-subtle);
+        }
+
+        .recommendation-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 10px;
+        }
+
+        .recommendation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 11px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(31, 41, 55, 0.9);
+        }
+
+        .product-main {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .product-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #e5e7eb;
+        }
+
+        .product-sub {
+            font-size: 0.75rem;
+            color: var(--text-subtle);
+        }
+
+        .sentiment-badge {
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: var(--badge-bg);
+            border: 1px solid rgba(34, 197, 94, 0.7);
+            font-size: 0.8rem;
+            color: #bbf7d0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sentiment-badge span.dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        .empty-state {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: var(--text-subtle);
+        }
+
+        .footer-note {
+            margin-top: 18px;
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="app-card">
+
+            <div class="header">
+                <div class="title-block">
+                    <h1>
+                        Sentiment-Based Product Recommendation
+                        <span class="title-pill">Smart Suggestions</span>
+                    </h1>
+                    <p class="subtitle">
+                        Enter a username to discover products recommended based on sentiment trends and historical review patterns.
+                    </p>
+                </div>
+                <div class="sentiment-chip">
+                    <span class="sentiment-dot"></span>
+                    Sentiment engine powered by NLP
+                </div>
+            </div>
+
+            <div class="layout">
+                <!-- Left: Form -->
+                <div class="form-card">
+                    <h2>Find Recommendations</h2>
+                    <p class="form-description">
+                        Type a valid user ID or username to see their top sentiment-driven product recommendations.
+                    </p>
+                    <form method="post">
+                        <div class="form-group">
+                            <label for="user">User</label>
+                            <input type="text" id="user" name="user" placeholder="e.g. john_doe_123" required>
+                            <p class="hint">We’ll use this to look up similar users and products from past reviews.</p>
+                        </div>
+
+                        <button type="submit" class="btn-primary">
+                            <span class="icon">✨</span>
+                            <span>Get Recommendations</span>
+                        </button>
+                    </form>
+
+                    {% if error_message %}
+                        <div class="error-message">
+                            {{ error_message }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Right: Recommendations -->
+                <div class="recommendations-card">
+                    <div class="recommendations-header">
+                        <h2>Recommended Products</h2>
+                        {% if recommendations is not none and recommendations|length > 0 %}
+                            <span class="results-meta">
+                                Showing top {{ recommendations|length }} matches
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    {% if recommendations is not none and recommendations|length > 0 %}
+                        <ul class="recommendation-list">
+                            {# IMPORTANT CHANGE: iterate directly over the list #}
+                            {% for product in recommendations %}
+                                <li class="recommendation-item">
+                                    <div class="product-main">
+                                        <div class="product-name">
+                                            {{ product.name }}
+                                        </div>
+                                        <div class="product-sub">
+                                            Based on similar users and sentiment signals
+                                        </div>
+                                    </div>
+                                    <div class="sentiment-badge">
+                                        <span class="dot"></span>
+                                        {{ product.pos_sent_percentage }}% positive
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="empty-state">
+                            No recommendations to show yet. Try entering a different user or ensure this user has prior activity.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="footer-note">
+                Sentiment and similarity powered by your review data.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
