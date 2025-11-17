@@ -366,7 +366,10 @@
                 <!-- Right: Recommendations -->
                 <div class="recommendations-card">
                     <div class="recommendations-header">
-                        <h2>Recommended Products</h2>
+                        <h2>
+                            Recommended Products
+                            {% if user_name %} for <span style="color:#6366f1;">{{ user_name }}</span>{% endif %}
+                        </h2>
                         {% if recommendations is not none and recommendations|length > 0 %}
                             <span class="results-meta">
                                 Showing top {{ recommendations|length }} matches

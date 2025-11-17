@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-from recommendation_model import product_recommendations_user
+from model import product_recommendations_user
 
 # load user_final_rating, df_sent_analysis, tfidf_vectorizer, rf_best_model here
 
@@ -24,7 +24,7 @@ def recommend():
                 error_message = f"No recommendations found for user '{user}'."
             else:
                 recommendations = df_recommendations.to_dict(orient="records")
-                return render_template("index.html", recommendations=recommendations)
+                return render_template("index.html", recommendations=recommendations, user_name=user)
 
     return render_template(
         "index.html",
